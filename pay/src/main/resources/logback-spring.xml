@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty name="logFilePath" source="file.path" defaultValue="/tmp"/>
+    <springProperty name="bizLogLevel" source="biz.log.level" defaultValue="INFO"/>
+    <springProperty name="otherLogLevel" source="other.log.level" defaultValue="ERROR"/>
+    <!-- <springProfile name="ci">-->
+    <!-- configuration to be enabled when the "dev" profile is active -->
+    <Property name="bizLogLevel" value="${bizLogLevel}"/>
+    <Property name="otherLogLevel" value="${otherLogLevel}"/>
+    <Property name="logFilePath" value="${logFilePath}"/>
+    <Property name="logSize" value="2048 MB"/>
+    <Property name="sysName" value="pay"/>
+    <Property name="maxFile" value="100"/>
+    <Property name="errorLogFile" value="${sysName}_err"/>
+    <Property name="bizLogFile" value="${sysName}_biz"/>
+    <Property name="allLogFile" value="${sysName}_all"/>
+    <Property name="threadLogFile" value="${sysName}_thread"/>
+
+    <timestamp key="byMonth" datePattern="yyyyMM"/>
+
+    <!-- 管控台日志打印，发布生产需注释 -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="utf-8"> <!-- encoder 可以指定字符集，对于中文输出有意义 -->
+            <!-- %.-1level 只显示信息级别的首字母,%-5level 左对齐显示信息级别全称 -->
+            <!-- 如需自定义关键字，用 %mdc{键名} 表示,程序中用MDC.put("键名","键值")设置，可动态设置 [%logger:%line]-->
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+        </encoder>>
+    </appender>
+
+
+    <!-- 线程池日志文件 -->
+    <appender name="ThreadRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logFilePath}/${threadLogFile}.log</File>
+        <encoder>
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${byMonth}/${threadLogFile}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>${maxFile}</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${logSize}</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!-- error 级别日志文件 -->
+    <appender name="ErrorRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logFilePath}/${errorLogFile}.log</File>
+        <encoder>
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${byMonth}/${errorLogFile}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>${maxFile}</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${logSize}</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 普通日志文件,排除错误日志 -->
+    <appender name="BizRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logFilePath}/${bizLogFile}.log</File>
+        <encoder>
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${byMonth}/${bizLogFile}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>512MB</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="RuleRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logFilePath}/${ruleLogFile}.log</File>
+        <encoder>
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${byMonth}/${ruleLogFile}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>512MB</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
+    </appender>
+    <appender name="ruleExperianLogFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logFilePath}/${ruleExperianLogFile}.log</File>
+        <encoder>
+            <Pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] [%X{requestNo}|%X{consumerIp}|%X{sysChannelCode}|%X{localIp}] [%c:%line] - %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFilePath}/${byMonth}/${ruleExperianLogFile}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>512MB</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
+    </appender>
+
+
+    <logger name="qian.ling.yi.paycontext.pay" level="${bizLogLevel}" additivity="false">
+        <appender-ref ref="ErrorRollingFile"/>
+        <appender-ref ref="BizRollingFile"/>
+        <appender-ref ref="Console"/>
+    </logger>
+
+
+    <root level="${otherLogLevel}">
+        <appender-ref ref="ErrorRollingFile"/>
+        <appender-ref ref="BizRollingFile"/>
+        <appender-ref ref="Console"/>
+    </root>
+</configuration>
